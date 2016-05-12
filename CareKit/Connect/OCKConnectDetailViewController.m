@@ -1,21 +1,21 @@
 /*
  Copyright (c) 2016, Apple Inc. All rights reserved.
- 
+
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
- 
+
  1.  Redistributions of source code must retain the above copyright notice, this
  list of conditions and the following disclaimer.
- 
+
  2.  Redistributions in binary form must reproduce the above copyright notice,
  this list of conditions and the following disclaimer in the documentation and/or
  other materials provided with the distribution.
- 
+
  3.  Neither the name of the copyright holder(s) nor the names of any contributors
  may be used to endorse or promote products derived from this software without
  specific prior written permission. No license is granted to the trademarks of
  the copyright holders even if such marks are included in this software.
- 
+
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -55,7 +55,7 @@ static const CGFloat HeaderViewHeight = 225.0;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
+
     self.tableView.estimatedRowHeight = 44.0;
     self.tableView.rowHeight = UITableViewAutomaticDimension;
     [self prepareView];
@@ -85,16 +85,16 @@ static const CGFloat HeaderViewHeight = 225.0;
     }
     _headerView.showEdgeIndicator = self.showEdgeIndicator;
     _headerView.contact = self.contact;
-    
+
     self.tableView.tableHeaderView = _headerView;
 }
 
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
-    
+
     CGFloat height = [_headerView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize].height;
     CGRect headerViewFrame = _headerView.frame;
-    
+
     if (height != headerViewFrame.size.height) {
         headerViewFrame.size.height = height;
         _headerView.frame = headerViewFrame;
@@ -108,10 +108,10 @@ static const CGFloat HeaderViewHeight = 225.0;
 - (void)createTableViewDataArray {
     _tableViewData = [NSMutableArray new];
     _sectionTitles = [NSMutableArray new];
-    
+
     NSMutableArray<NSNumber *> *contactInfoSection = [NSMutableArray new];
     NSMutableArray<NSString *> *sharingSection = [NSMutableArray new];
-    
+
     if (self.contact.phoneNumber) {
         [contactInfoSection addObject:@(OCKConnectTypePhone)];
     }
@@ -121,7 +121,7 @@ static const CGFloat HeaderViewHeight = 225.0;
     if (self.contact.emailAddress) {
         [contactInfoSection addObject:@(OCKConnectTypeEmail)];
     }
-    
+
     if (self.delegate) {
         NSString *sharingTitle = OCKLocalizedString(@"SHARING_CELL_TITLE", nil);
         if ([self.delegate respondsToSelector:@selector(connectViewController:titleForSharingCellForContact:)]) {
@@ -132,7 +132,7 @@ static const CGFloat HeaderViewHeight = 225.0;
         }
         [sharingSection addObject:sharingTitle];
     }
-    
+
     if (contactInfoSection.count > 0) {
         [_tableViewData addObject:[contactInfoSection copy]];
         _contactInfoSectionTitle = OCKLocalizedString(@"CONTACT_INFO_SECTION_TITLE", nil);
@@ -146,7 +146,10 @@ static const CGFloat HeaderViewHeight = 225.0;
 }
 
 - (void)makeCallToNumber:(NSString *)number {
-    NSString *stringURL = [NSString stringWithFormat:@"tel:%@", number];
+    // Strip non-digit characters
+    NSCharacterSet *nonDigits = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
+    NSString *stringURL = [[number componentsSeparatedByCharactersInSet:nonDigits] componentsJoinedByString:@""];
+    stringURL = [NSString stringWithFormat:@"tel:%@", stringURL];
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:stringURL]];
 }
 
@@ -176,11 +179,11 @@ static const CGFloat HeaderViewHeight = 225.0;
         case OCKConnectTypePhone:
             [self makeCallToNumber:cell.contact.phoneNumber.stringValue];
             break;
-            
+
         case OCKConnectTypeMessage:
             [self sendMessageToNumber:cell.contact.messageNumber.stringValue];
             break;
-            
+
         case OCKConnectTypeEmail:
             [self sendEmailToAddress:cell.contact.emailAddress];
             break;
@@ -220,7 +223,7 @@ static const CGFloat HeaderViewHeight = 225.0;
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *sectionTitle = _sectionTitles[indexPath.section];
-    
+
     if ([sectionTitle isEqualToString:_contactInfoSectionTitle]) {
         static NSString *ContactCellIdentifier = @"ContactInfoCell";
         OCKContactInfoTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:ContactCellIdentifier];
@@ -249,7 +252,7 @@ static const CGFloat HeaderViewHeight = 225.0;
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    
+
     NSString *sectionTitle = _sectionTitles[indexPath.section];
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
 
